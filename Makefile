@@ -6,7 +6,7 @@
 #    By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/05/19 15:07:54 by zmeribaa          #+#    #+#              #
-#    Updated: 2022/05/21 13:32:28 by zmeribaa         ###   ########.fr        #
+#    Updated: 2022/06/23 04:32:06 by zmeribaa         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,15 +17,15 @@ O = *.o
 
 MLX = -lmlx -framework OpenGL -framework AppKit
 
-FLAGS = -Wall -Wextra -Werror -O3
+FLAGS = -Wall -Wextra -Werror
 DEP = ./Includes/cub3d.h tools/*.h $(SRC)
 
-SANITIZER = -g -fsanitize=address
+SANITIZER = -g 
 
 all: $(NAME)
 
 $(NAME): $(DEP)
-		gcc $(SRC) $(FLAGS) $(MLX) $(SANITIZER) -o $(NAME)
+		$(CC) $(SRC) $(FLAGS) $(MLX) -o $(NAME)
 clean:
 		/bin/rm -f $(O)
 fclean: clean

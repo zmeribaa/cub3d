@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: atabout <atabout@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ziyad <ziyad@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/02/07 12:19:13 by atabout           #+#    #+#             */
-/*   Updated: 2020/02/08 01:16:31 by atabout          ###   ########.fr       */
+/*   Updated: 2022/06/30 17:53:45 by ziyad            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 **		-> then its set to 10240
 */
 
-int		ft_double_free(char *s1, char *s2, int rd)
+int	ft_double_free(char *s1, char *s2, int rd)
 {
 	if (s1 != NULL)
 	{
@@ -37,9 +37,9 @@ int		ft_double_free(char *s1, char *s2, int rd)
 	return (rd);
 }
 
-int		ft_nl_check(char *str)
+int	ft_nl_check(char *str)
 {
-	int i;
+	int	i;
 
 	i = -1;
 	while (str[++i] != '\n')
@@ -50,7 +50,7 @@ int		ft_nl_check(char *str)
 
 char	*ft_strjoin_freed(char *s1, char *s2, int option)
 {
-	char *tmp;
+	char	*tmp;
 
 	tmp = ft_strjoin(s1, s2);
 	if (option == 1 || option == 3)
@@ -66,55 +66,55 @@ char	*ft_strjoin_freed(char *s1, char *s2, int option)
 	return (tmp);
 }
 
-int		get_next_line(int fd, char **line)
+int	get_next_line(int fd, char **line)
 {
-	static char		remains[OPEN_MAX][BUFFER_SIZE + 1];
+	static char		remains[BUFFER_SIZE + 1];
 	int				i;
 
 	if (fd < 0 || fd > OPEN_MAX || line == NULL || BUFFER_SIZE <= 0)
 		return (-1);
-	if ((*line = ft_strdup("")) == NULL)
+	*line = ft_strdup("");
+	if (*line == NULL)
 		return (-1);
-	if (remains[fd][0] == '\0')
-		return (ft_readline(fd, line, remains[fd]));
-	if ((i = ft_nl_check(remains[fd])) != -1)
+	if (remains[0] == '\0')
+		return (ft_readline(fd, line, remains));
+	i = ft_nl_check(remains);
+	if (i != -1)
 	{
 		free(*line);
-		if ((*line = malloc(sizeof(**line) * (i + 1))) == NULL)
-			return (-1);
-		ft_strncpy(*line, remains[fd], i);
+		*line = malloc(sizeof(**line) * (i + 1));
+		ft_strncpy(*line, remains, i);
 		(*line)[i] = '\0';
-		ft_strcpy(remains[fd], remains[fd] + i + 1);
+		ft_strcpy(remains, remains + i + 1);
 		return (1);
 	}
 	free(*line);
-	if ((*line = malloc(sizeof(**line) * (ft_strlen(remains[fd]) + 1))) == NULL)
-		return (-1);
-	ft_strcpy(*line, remains[fd]);
-	remains[fd][0] = '\0';
-	return (ft_readline(fd, line, remains[fd]));
+	*line = malloc(sizeof(**line) * (ft_strlen(remains) + 1));
+	ft_strcpy(*line, remains);
+	remains[0] = '\0';
+	return (ft_readline(fd, line, remains));
 }
 
-int		ft_readline(int fd, char **line, char *remains)
+int	ft_readline(int fd, char **line, char *remains)
 {
 	int		rt;
 	char	*buff;
 
-	if ((buff = malloc(sizeof(*buff) * (BUFFER_SIZE + 1))) == NULL)
-		return (ft_double_free(*line, NULL, -1));
-	while ((rt = read(fd, buff, BUFFER_SIZE)) > 0)
+	buff = malloc(sizeof(*buff) * (BUFFER_SIZE + 1));
+	rt = read(fd, buff, BUFFER_SIZE);
+	while (rt > 0)
 	{
 		buff[rt] = '\0';
-		if ((rt = ft_nl_check(buff)) != -1)
+		rt = ft_nl_check(buff);
+		if (rt != -1)
 		{
 			ft_strcpy(remains, buff + rt + 1);
 			buff[rt] = '\0';
-			if ((*line = ft_strjoin_freed(*line, buff, 1)) == NULL)
-				return (ft_double_free(buff, NULL, -1));
+			*line = ft_strjoin_freed(*line, buff, 1);
 			return (ft_double_free(buff, NULL, 1));
 		}
-		if ((*line = ft_strjoin_freed(*line, buff, 1)) == NULL)
-			return (ft_double_free(buff, NULL, -1));
+		*line = ft_strjoin_freed(*line, buff, 1);
+		rt = read(fd, buff, BUFFER_SIZE);
 	}
 	if (rt == -1)
 		return (ft_double_free(buff, *line, -1));

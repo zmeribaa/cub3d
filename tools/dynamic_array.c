@@ -1,58 +1,93 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   dynamic_array.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/30 22:49:53 by ziyad             #+#    #+#             */
+/*   Updated: 2022/07/01 21:10:35 by zmeribaa         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Includes/cub3d.h"
 #include "libft.h"
 
-char *no_white_space_strcpy(char *src)
+int	is_valid(char c)
 {
-    int i = 0;
-    int j = 0;
-    char *dst;
-
-    while (src[i] != '\0')
-    {
-        if (ft_isspace(src[i]) == 0)
-            j++;
-        i++;
-    }
-    dst = malloc((j + 1) * sizeof(char));
-    i = 0;
-    j = 0;
-    while (src[i] != '\0')
-    {
-        if (isspace(src[i]) == 0)
-        {
-            dst[j] = src[i];
-            j++; 
-        }
-        i++;
-    }
-    dst[j] = '\0';
-    return dst;
+	if (c == '1' || c == '0' || c == 'N'
+		|| c == 'S' || c == 'W' || c == 'E')
+		return (1);
+	return (0);
 }
 
-// Helper functions to use a string in a dynamic array to use to same map;
-
-// Add line: Adds another line to map 2d array
-// Makes a copy, frees the old map and points to the new copy with an extra line
-int add_line(map *_map, char *line)
+int	validate_map(t_all *all)
 {
-    char **new_map;
-    int i;
-    (void)line;
+	int		i;
+	int		j;
 
-    i = 0;
-    _map->map_height++;
-    new_map = malloc((sizeof(char *) * (_map->map_height + 1)));
-    while(_map->map[i] != NULL)
-    {
-        new_map[i] = _map->map[i];
-        i++;
-    }
-    new_map[i] = no_white_space_strcpy(line);
-    if (strlen(new_map[i]) > _map->map_width)
-        _map->map_width = strlen(new_map[i]);
-    i++;
-    new_map[i] = NULL;
-    free(_map->map);
-    _map->map = new_map;
-    return 0;
+	i = 0;
+	while (i < all->map.map_height)
+	{
+		j = 0;
+		while (all->map.map[i][j] != '\0')
+		{
+			if (is_valid(all->map.map[i][j]) == 0)
+			{
+				all->map.error = INVALID_MAP;
+				return (all->map.error);
+			}
+			j++;
+		}
+		i++;
+	}
+	return (0);
+}
+
+char	*no_white_space_strcpy(char *src)
+{
+	int		i;
+	int		j;
+	char	*dst;
+
+	i = -1;
+	j = 0;
+	while (src[++i] != '\0')
+	{
+		if (ft_isspace(src[i]) == 0)
+			j++;
+	}
+	dst = malloc((j + 1) * sizeof(char));
+	i = -1;
+	j = -1;
+	while (src[++i] != '\0')
+	{
+		if (isspace(src[i]) == 0)
+			dst[++j] = src[i];
+	}
+	dst[++j] = '\0';
+	return (dst);
+}
+
+int	add_line(t_map *_map, char *line)
+{
+	char	**new_map;
+	int		i;
+
+	i = 0;
+	_map->map_height++;
+	new_map = malloc((sizeof(char *) * (_map->map_height + 1)));
+	while (_map->map[i] != NULL)
+	{
+		new_map[i] = _map->map[i];
+		i++;
+	}
+	new_map[i] = no_white_space_strcpy(line);
+	if (strlen(new_map[i]) > _map->map_width)
+		_map->map_width = strlen(new_map[i]);
+	i++;
+	new_map[i] = NULL;
+	free(_map->map);
+	_map->map = new_map;
+	return (0);
 }

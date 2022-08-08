@@ -1,226 +1,130 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parse_map.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/27 20:03:14 by zmeribaa          #+#    #+#             */
+/*   Updated: 2022/07/01 21:09:34 by zmeribaa         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Includes/cub3d.h" 
 #include "../tools/libft.h"
 #include "../tools/get_next_line.h"
 
-
-// To do: Have each texture parsing in a separate function as its repeated
-void save_texture(char *line, map *_map)
+void	save_texture(char *line, t_map *_map)
 {
-    (void) line;
-    (void) _map;
-    int i;
-
-    i = 0;
-
-    // Validate texture, if error found save error code in _map->error code
-    // Else open texture file, save fd i _map->fd
-    // An example of a valid texture line is:
-    // "NO ./path_to_the_north_texture"
-    if (strlen(line) < 4)
-    {
-        _map->error = 1;
-        return;
-    }
-    if (line[i] == 'N' && line[i+1] == 'O')
-    {
-        i += 2; // Skip the direction directive
-        if (line[i] == ' ')
-        {
-            while (isspace(line[i]))
-                i++;
-            if ((_map->north_texture = open(&line[i], O_RDONLY)) == -1)
-            {
-                _map->error = 1;
-                return;
-            }
-        }
-        else
-        {
-            _map->error = 1;
-            return;
-        }
-    }
-    else if (line[i] == 'S' && line[i+1] == 'O')
-    {
-        i += 2; // Skip the direction directive
-        if (line[i] == ' ')
-        {
-            while (isspace(line[i]))
-                i++;
-            if ((_map->south_texture = open(&line[i], O_RDONLY)) == -1)
-            {
-                _map->error = 1;
-                return;
-            }
-        }
-        else
-        {
-            _map->error = 1;
-            return;
-        }
-    }
-    else if (line[i] == 'W' && line[i+1] == 'E')
-    {
-        i += 2; // Skip the direction directive
-        if (line[i] == ' ')
-        {
-            while (isspace(line[i]))
-                i++;
-            if ((_map->west_texture = open(&line[i], O_RDONLY)) == -1)
-            {
-                _map->error = 1;
-                return;
-            }
-        }
-        else
-        {
-            _map->error = 1;
-            return;
-        }
-    }
-    else if (line[i] == 'E' && line[i+1] == 'A')
-    {
-        i += 2; // Skip the direction directive
-        if (line[i] == ' ')
-        {
-            while (isspace(line[i]))
-                i++;
-            if ((_map->east_texture = open(&line[i], O_RDONLY)) == -1)
-            {
-                _map->error = 1;
-                return;
-            }
-        }
-        else
-        {
-            _map->error = 1;
-            return;
-        }
-    }
-    else
-    {
-        _map->error = 1;
-    }
+	if (strlen(line) < 4)
+	{
+		_map->error = 1;
+		return ;
+	}
+	if (line[0] == 'N' && line[1] == 'O')
+		read_single_texture(line, _map, NORTH_TEXTURE);
+	else if (line[0] == 'S' && line[1] == 'O')
+		read_single_texture(line, _map, SOUTH_TEXTURE);
+	else if (line[0] == 'W' && line[1] == 'E')
+		read_single_texture(line, _map, WEST_TEXTURE);
+	else if (line[0] == 'E' && line[1] == 'A')
+		read_single_texture(line, _map, EAST_TEXTURE);
+	else
+		_map->error = 1;
 }
 
-// Check if there's a number before calling atoi
-void save_color(char *line, map *_map)
+void	save_color(char *line, t_map *_map)
 {
-    // Validate color, if error found save error code in _map->error code
-    // Convert to hexa and save
-    char *data;
-    int red, green, blue;
-    int i = 1;
-    while (isspace(line[i]))
-        i++;
-    red = atoi(&line[i]);
-    data = strchr(&line[i], ','); // Find first ',' delimiter
-    if (data == NULL)
-    {
-        _map->error = 1;
-        return;
-    }
-    green = atoi(++data);
-    data = strchr(data, ','); // Find next ',' delimiter
-    if (data == NULL)
-    {
-        _map->error = 1;
-        return;
-    }
-    blue = atoi(++data);
-    if (line[0] == 'F')
-        _map->floor_color = ((red & 0xff) << 16) + ((green & 0xff) << 8) + (blue & 0xff);
-    else if (line[0] == 'C')
-        _map->ceiling_color = ((red & 0xff) << 16) + ((green & 0xff) << 8) + (blue & 0xff);
-    //printf("Red: %d, Green: %d, Blue: %d\n", red, green, blue);
+	t_rgb	color;
+	int		i;
+
+	i = 1;
+	while (isspace(line[i]))
+		i++;
+	color.red = atoi(&line[i]);
+	while (isdigit(line[i]) || isspace(line[i]))
+		i++;
+	if (line[i] != ',')
+	{
+		_map->error = INVALID_COLOR;
+		return ;
+	}
+	color.green = atoi(&line[++i]);
+	while (isdigit(line[i]) || isspace(line[i]))
+		i++;
+	if (line[i] != ',')
+	{
+		_map->error = INVALID_COLOR;
+		return ;
+	}
+	color.blue = atoi(&line[++i]);
+	save_rgb(line, _map, color);
 }
 
-// Check if map is valid;
-// Each line should start and end with a '1'
-// First and last line should be 1's only
-// No duplicate player positions are
-void validate_map(map *_map)
+void	save_map(char *line, t_map *_map, int fd)
 {
-    (void) _map;
+	int	rt;
+
+	rt = 1;
+	while (rt != 0)
+	{
+		if (!(save_map_line(line, _map)))
+			break ;
+		free(line);
+		rt = get_next_line(fd, &line);
+	}
+	if (rt == 0)
+	{
+		save_map_line(line, _map);
+		free(line);
+		rt = get_next_line(fd, &line);
+	}
+	free(line);
 }
 
-void save_map(char *line, map *_map, int fd)
+int	parse_map_loop(char *line, t_map *_map, int fd)
 {
-    int i;
-    int rt;
+	int	i;
 
-    i = 0;
-    rt = 1;
-    // this skips the first line; To fix later
-    printf("Function called\n");
-    while (rt != 0)
-    {
-        i = 0;
-        // Skip whitespaces
-        while (isspace(line[i]))
-            i++;
-        if (line[i] == '1')
-            add_line( _map,line);
-        else
-        {
-            break;
-        }
-        free(line);
-        rt = get_next_line(fd, &line);
-    }
-    if (rt == 0)
-    {
-        i = 0;
-        // Skip whitespaces
-        while (isspace(line[i]))
-            i++;
-        if (line[i] == '1')
-            add_line( _map,line);
-        free(line);
-        rt = get_next_line(fd, &line);
-    }
-    validate_map(_map);
+	i = 0;
+	while (isspace(line[i]))
+		i++;
+	if (line[i] == 'N' || line[i] == 'S' || line[i] == 'W' || line[i] == 'E')
+		save_texture(&line[i], _map);
+	else if (line[i] == 'F' || line[i] == 'C')
+		save_color(&line[i], _map);
+	else if (line[i] == '1' || line[i] == '0')
+	{
+		save_map(line, _map, fd);
+		return (1);
+	}
+	else if (line[i] == '\0')
+		return (2);
+	else
+		return (3);
+	return (0);
 }
 
-int parse_map(char *map_file, map *_map)
+int	parse_map(char *map_file, t_all *all)
 {
-    //char *ret;
-    int fd;
-    char *line;
-    int i;
-    // To replace with str find
-    // Check if extension is .cub
-    //ret = strchr(map_file, ".cub"); 
-    //if (ret == NULL || strlen(ret) != 4)
-    //    return (1);
-    // Check if file readable
-    _map->error = 0;
-    if ((fd = open(map_file, O_RDONLY)) == -1)
-        return (2);
-    // Check & save content: save textures, map & floor and cieling colors;
-    line = NULL;
-    while (get_next_line(fd, &line) != 0)
-    {
-        i = 0;
-        // Skip whitespaces
-        while (isspace(line[i]))
-            i++;
-        if (line[i] == 'N' || line[i] == 'S' || line[i] == 'W' || line[i] == 'E')
-            save_texture(&line[i], _map);
-        else if (line[i] == 'F' || line[i] == 'C')
-            save_color(&line[i], _map);
-        else if (line[i] == '1' || line[i] == '0') // Maybe keep only '1' since a map can\t start with a 0 and then it will go directly to the else condition
-        {
-            save_map(line, _map, fd);
-            break; // Skip everything else; As the map is the last thing to be parsed on .cub file;
-        }
-        else if (line[i] == '\0')
-            continue; // Empty line continue
-        else
-            return (3); // Invalid line
-        if (_map->error != 0)
-            return (_map->error);
-        free(line); // Bring back after double free fix
-    }
-    return (0);
+	int		fd;
+	char	*line;
+	int		rt;
+
+	all->map.error = 0;
+	fd = open(map_file, O_RDONLY);
+	if (fd == -1)
+		return (2);
+	while (get_next_line(fd, &line) != 0)
+	{
+		rt = parse_map_loop(line, &(all->map), fd);
+		if (rt == 1)
+			break ;
+		else if (rt == 3)
+			return (3);
+		if (all->map.error != 0)
+			return (all->map.error);
+		free(line);
+	}
+	return (validate_map(all));
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_utils.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: atabout <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: ziyad <ziyad@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/02/08 14:45:13 by atabout           #+#    #+#             */
-/*   Updated: 2020/02/08 14:45:16 by atabout          ###   ########.fr       */
+/*   Updated: 2022/06/30 22:51:03 by ziyad            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ char	*ft_strncpy(char *dst, const char *src, size_t len)
 
 size_t	ft_strlen(const char *s)
 {
-	size_t i;
+	size_t	i;
 
 	i = 0;
 	while (s[i] != '\0')
@@ -63,7 +63,8 @@ char	*ft_strjoin(char *s1, char *s2)
 		return (NULL);
 	i = ft_strlen(s1);
 	j = ft_strlen(s2);
-	if (!(result = (char*)malloc(sizeof(char) * (i + j + 1))))
+	result = (char *)malloc(sizeof(char) * (i + j + 1));
+	if (!result)
 		return (NULL);
 	i = 0;
 	j = 0;
@@ -87,7 +88,8 @@ char	*ft_strdup(const char *s1)
 	int		i;
 
 	i = 0;
-	if (!(s2 = (char*)malloc(sizeof(*s2) * (ft_strlen(s1) + 1))))
+	s2 = (char *)malloc(sizeof(*s2) * (ft_strlen(s1) + 1));
+	if (!s2)
 		return (NULL);
 	while (s1[i] != '\0')
 	{

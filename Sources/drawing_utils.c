@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   drawing_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ziyad <ziyad@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/08 20:05:51 by zmeribaa          #+#    #+#             */
-/*   Updated: 2022/05/21 13:36:23 by zmeribaa         ###   ########.fr       */
+/*   Updated: 2022/06/30 20:54:05 by ziyad            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,74 +14,67 @@
 
 void	my_mlx_pixel_put(t_data *data, int x, int y, int color)
 {
-	// if (x < 0 || x > data->map.map_width || y < 0 || y > data->map.map_height)
-	// 	return ;
 	char	*dst;
 
+	if (x < 0 || x > data->width - 1 || y < 0 || y > data->height - 1)
+		return ;
 	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
-	*(unsigned int*)dst = color;
+	*(unsigned int *)dst = color;
 }
 
-void wall(int x, int y, int color1, int Tile_size, t_data *img)
+int	get_dir(t_ray _ray)
 {
-	int j;
-	int i;
+	if (_ray.is_rayfacing_up && !_ray.was_hit_vert)
+		return (NORTH_TEXTURE);
+	else if (_ray.is_rayfacing_left && _ray.was_hit_vert)
+		return (EAST_TEXTURE);
+	else if (_ray.is_rayfacing_down && !_ray.was_hit_vert)
+		return (SOUTH_TEXTURE);
+	else if (_ray.is_rayfacing_right && _ray.was_hit_vert)
+		return (WEST_TEXTURE);
+	return (0);
+}
 
-	i = y;
-	while (i < Tile_size + y)
+void	draw_wall(t_ray _ray, t_coordinates c, t_all *all)
+{
+	int	offsetx;
+	int	offsety;
+	int	distance;
+	int	dir;
+
+	dir = get_dir(_ray);
+	if (_ray.was_hit_vert)
+		offsetx = (int)(_ray.wall_hity) % TILESIZE;
+	else
+		offsetx = (int)(_ray.wall_hitx) % TILESIZE;
+	while (c.y < _ray.wallbottompixel)
 	{
-		j = x;
-		while (j < Tile_size + x)
-		{
-			my_mlx_pixel_put(img, j, i, color1);
-			j++;
-		}
-		i++;
+		distance = (c.y + ((int)_ray.projectedwallheight / 2)
+				- (all->height / 2));
+		offsety = distance * ((float)TILESIZE / (int)_ray.projectedwallheight);
+		my_mlx_pixel_put(all->img, c.x, c.y, \
+			all->map.textures[dir].img_adr[TILESIZE * offsety + offsetx]);
+		c.y++;
 	}
 }
 
-void	circle_binkle(int x, int y, int r, int color, t_data *img)
+void	draw_ceiling(int walltoppixel, int x, t_all *all)
 {
-    double i, angle, x1, y1;
-	int j = 0;
-	while (j < r)
+	int	y;
+
+	y = 0;
+	while (y < walltoppixel)
 	{
-		i = 0;
-		while (i < 360)
-		{
-			angle = i;
-
-			x1 = (j * cos(angle * M_PI / 180))/2;
-			y1 = (j * sin(angle * M_PI / 180))/2;
-
-			my_mlx_pixel_put(img, x + x1, y + y1, color);
-			i += 0.1;
-		}
-		j++;
+		my_mlx_pixel_put(all->img, x, y, all->map.ceiling_color);
+		y++;
 	}
 }
 
-void	line(int begin_x, int begin_y, int end_x, int end_y, t_data *img)
+void	draw_floor(int y, int x, t_all *all)
 {
-	double i;
-	double j;
-	double pixels_x;
-	double pixels_y;
-	int pixels;
-
-	i = end_x - begin_x;
-	j = end_y - begin_y;
-	pixels = sqrt((i * i) + (j * j));
-	i /= pixels;
-	j /= pixels;
-	pixels_x = begin_x;
-	pixels_y = begin_y;
-	while (pixels)
+	while (y < all->height)
 	{
-		my_mlx_pixel_put(img, pixels_x, pixels_y, BLACK);
-		pixels_x += i;
-		pixels_y += j;
-		--pixels;
+		my_mlx_pixel_put(all->img, x, y, all->map.floor_color);
+		y++;
 	}
 }
-
